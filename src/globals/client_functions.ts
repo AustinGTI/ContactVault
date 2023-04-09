@@ -8,6 +8,15 @@ import {
 import {AuthServiceClient} from "../protos/AuthServiceClientPb";
 import {Contact, ContactID, ContactList, Empty} from "../protos/contacts_pb";
 import {ContactServiceClient} from "../protos/ContactsServiceClientPb";
+import {useDispatch} from "react-redux";
+import {
+    addContactRedux,
+    clearContactsRedux,
+    deleteContactRedux,
+    syncContactsRedux,
+    updateContactRedux
+} from "../redux/contacts_slice";
+import {clearUserRedux, setUserRedux} from "../redux/user_slice";
 
 // region CONSTANTS
 const HOST = "http://localhost:8080";
@@ -25,7 +34,8 @@ export function login(username: string, password: string): Promise<LoginResponse
             if (err) {
                 reject(err);
             } else {
-                resolve(response);
+                // on login, call userMe to get user details and store them in the redux store
+                userMe(response.getJwttoken()).then((_) => resolve(response)).catch(reject);
             }
         });
     });
@@ -37,6 +47,10 @@ export function logout(): Promise<void> {
     return new Promise((resolve, reject) => {
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("refresh_token");
+        // clear redux store
+        const dispatch = useDispatch();
+        dispatch(clearContactsRedux());
+        dispatch(clearUserRedux());
         resolve();
     });
 }
@@ -67,6 +81,7 @@ export function refreshAccessToken(): Promise<RefreshAccessTokenResponse> {
 // function to get user details
 export function userMe(accessToken: string, attempt_refresh: boolean = true): Promise<UserResponse> {
     return new Promise((resolve, reject) => {
+        const dispatch = useDispatch();
         const request = new UserRequest();
         const client = new AuthServiceClient(HOST, null, null);
         client.userMe(request, {'authorization': accessToken}, (err, response) => {
@@ -85,6 +100,8 @@ export function userMe(accessToken: string, attempt_refresh: boolean = true): Pr
                     reject(err);
                 }
             } else {
+                // store the user data in the redux store
+                dispatch(setUserRedux({id: response.getId(), username: response.getUsername()}))
                 resolve(response);
             }
         });
@@ -98,6 +115,7 @@ export function userMe(accessToken: string, attempt_refresh: boolean = true): Pr
 // function to get all contacts
 export function getContacts(accessToken: string, attempt_refresh: boolean = true): Promise<ContactList> {
     return new Promise((resolve, reject) => {
+        const dispatch = useDispatch();
         const client = new ContactServiceClient(HOST, null, null);
         client.getContacts(new ContactList(), {'authorization': accessToken}, (err, response) => {
             if (err) {
@@ -115,16 +133,18 @@ export function getContacts(accessToken: string, attempt_refresh: boolean = true
                     reject(err);
                 }
             } else {
+                // if the contacts were fetched successfully, sync the redux state with the response
+                dispatch(syncContactsRedux(response.getContactsList()));
                 resolve(response);
             }
         });
     });
 }
 
-
 // function to add a contact
 export function addContact(accessToken: string, contact: Contact,attempt_refresh: boolean = true): Promise<ContactID> {
     return new Promise((resolve, reject) => {
+        const dispatch = useDispatch();
         const client = new ContactServiceClient(HOST, null, null);
         client.addContact(contact, {'authorization': accessToken}, (err, response) => {
             if (err) {
@@ -143,6 +163,10 @@ export function addContact(accessToken: string, contact: Contact,attempt_refresh
                     reject(err);
                 }
             } else {
+                contact.setId(response.getId());
+                // if the contact was added successfully, update the contacts redux state
+                dispatch(addContactRedux(contact));
+
                 resolve(response);
             }
         });
@@ -152,6 +176,7 @@ export function addContact(accessToken: string, contact: Contact,attempt_refresh
 // function to update a contact
 export function updateContact(accessToken: string, contact: Contact,attempt_refresh: boolean = true): Promise<Contact> {
     return new Promise((resolve, reject) => {
+        const dispatch = useDispatch();
         const client = new ContactServiceClient(HOST, null, null);
         client.updateContact(contact, {'authorization': accessToken}, (err, response) => {
             if (err) {
@@ -169,6 +194,8 @@ export function updateContact(accessToken: string, contact: Contact,attempt_refr
                     reject(err);
                 }
             } else {
+                // if the contact was updated successfully, update the contacts redux state
+                dispatch(updateContactRedux(contact));
                 resolve(response);
             }
         });
@@ -178,6 +205,7 @@ export function updateContact(accessToken: string, contact: Contact,attempt_refr
 // function to delete a contact
 export function deleteContact(accessToken: string, contact_id: ContactID,attempt_refresh: boolean = true): Promise<Empty> {
     return new Promise((resolve, reject) => {
+        const dispatch = useDispatch();
         const client = new ContactServiceClient(HOST, null, null);
         client.deleteContact(contact_id, {'authorization': accessToken}, (err, response) => {
             if (err) {
@@ -195,6 +223,8 @@ export function deleteContact(accessToken: string, contact_id: ContactID,attempt
                     reject(err);
                 }
             } else {
+                // if the contact was deleted successfully, update the contacts redux state
+                dispatch(deleteContactRedux(contact_id.getId()));
                 resolve(response);
             }
         });
