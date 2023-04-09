@@ -5,6 +5,9 @@ import {RpcError} from "grpc-web";
 import {login} from "../globals/client_functions";
 import {useNavigate} from "react-router-dom";
 import {useDispatch} from "react-redux";
+import '../styles/global_styles.scss'
+import '../styles/login_page.scss'
+import Logo from "../assets/Logo";
 
 export default function LoginPage() {
     // ? constants and states
@@ -48,19 +51,26 @@ export default function LoginPage() {
 
     // ? render
     return (
-        <div className="login">
-            <h1>Login</h1>
-            {error && <p className="error-txt">{error}</p>}
-            <div className={'username-input'}>
-                <label htmlFor="username">Username</label>
-                <input type="text" name="username" id="username" ref={username_ref}/>
+        <div className="login-page">
+            <div className='logo'>
+                <Logo height={100}/>
             </div>
-            <div className={'password-input'}>
-                <label htmlFor="password">Password</label>
-                <input type="password" name="password" id="password" ref={password_ref}/>
-            </div>
-            <div className={'submit-btn'}>
-                <button onClick={handleSubmit}>Submit</button>
+            <div className="login-form">
+                <h1>Login To Leta Contacts Site.</h1>
+                <div className='error-box'>
+                   <p>{error}</p>
+                </div>
+                <div className={'username-input'}>
+                    <label htmlFor="username">Username</label>
+                    <input type="text" name="username" id="username" ref={username_ref} required/>
+                </div>
+                <div className={'password-input'}>
+                    <label htmlFor="password">Password</label>
+                    <input type="password" name="password" id="password" ref={password_ref} required/>
+                </div>
+                <div className={'submit-btn'}>
+                    <button onClick={handleSubmit}>Log In</button>
+                </div>
             </div>
         </div>
     );
