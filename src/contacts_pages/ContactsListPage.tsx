@@ -29,7 +29,7 @@ export default function ContactsListPage(): React.ReactElement {
 
     // retrieve the contacts from the server on mount
     useEffect(() => {
-        // if the jwt token is not present, it is treated as an invalid token
+        // presence of the jwt token is checked in the Auth component
         getContacts(`${localStorage.getItem('jwt_token')}`).then((contact_list) => {
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
