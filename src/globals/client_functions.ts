@@ -159,15 +159,15 @@ export function updateContact(accessToken: string, contact: Contact): Promise<Co
 }
 
 // function to delete a contact
-export function deleteContact(accessToken: string, contact: Contact): Promise<Empty> {
+export function deleteContact(accessToken: string, contact_id: ContactID): Promise<Empty> {
     return new Promise((resolve, reject) => {
         const client = new ContactServiceClient(HOST, null, null);
-        client.deleteContact(contact, {'authorization': accessToken}, (err, response) => {
+        client.deleteContact(contact_id, {'authorization': accessToken}, (err, response) => {
             if (err) {
                 // if there is an error, it means the access token is invalid, try to refresh it
                 refreshAccessToken().then((response) => {
                         // if refresh token is valid, try again with the new access token
-                        deleteContact(response.getAccesstoken(), contact).then(resolve).catch(reject);
+                        deleteContact(response.getAccesstoken(), contact_id).then(resolve).catch(reject);
                     }
                 ).catch((_) => {
                     // if refresh token is invalid, reject the promise
