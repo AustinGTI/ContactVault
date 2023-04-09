@@ -1,26 +1,28 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import LoginPage from "./auth_pages/LoginPage";
+import ContactsListPage from "./contacts_pages/ContactsListPage";
+import AddContactPage from "./contacts_pages/AddContactPage";
+import EditContactPage from "./contacts_pages/EditContactPage";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <BrowserRouter>
+            <Routes>
+                {/* login page */}
+                <Route path="login" element={<LoginPage/>}/>
+                {/* all contacts page */}
+                <Route path="contacts" element={<ContactsListPage/>}/>
+                {/* add contact page */}
+                <Route path="contacts/add" element={<AddContactPage/>}/>
+                {/* edit contact page */}
+                <Route path="contacts/:id" element={<EditContactPage/>}/>
+                {/* 404 page */}
+                <Route path="*" element={<div>404</div>}/>
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;
