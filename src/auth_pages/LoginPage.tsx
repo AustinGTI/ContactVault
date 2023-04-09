@@ -1,7 +1,10 @@
 import React, {useCallback, useReducer, useRef} from "react";
 import {AuthServiceClient} from "../protos/AuthServiceClientPb";
-import {LoginRequest,LoginResponse} from "../protos/auth_pb";
+import {LoginRequest, LoginResponse} from "../protos/auth_pb";
 import {RpcError} from "grpc-web";
+import {login} from "../globals/client_functions";
+import {useNavigate} from "react-router-dom";
+import {useDispatch} from "react-redux";
 
 export default function LoginPage() {
     // ? constants and states
@@ -9,17 +12,19 @@ export default function LoginPage() {
     const username_ref = useRef<HTMLInputElement>(null);
     const password_ref = useRef<HTMLInputElement>(null);
     // the current error message
-    const [error, setError] = useReducer((_ : string | null, newError : string | null) => {
+    const [error, setError] = useReducer((_: string | null, newError: string | null) => {
         // if the error is null, return null
         if (newError === null) return null;
         // otherwise, return the error and clear it after 5 seconds
         setTimeout(() => setError(null), 5000);
         return newError;
     }, null)
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     // ? functions
     // the function to handle the submit button
-    const handleSubmit = useCallback((e:React.MouseEvent<HTMLButtonElement>) => {
+    const handleSubmit = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
         // prevent the default action
         e.preventDefault();
         // get the username and password from the refs
@@ -28,36 +33,15 @@ export default function LoginPage() {
         // if the username and password are present
         if (username && password) {
             // send the username and password to the server using web gRPC
-            const client = new AuthServiceClient("http://localhost:8080");
-            const request = new LoginRequest();
-            request.setUsername(username);
-            request.setPassword(password);
-            client.login(request, {}, (err: RpcError, res: LoginResponse) => {
-                if (err) {
-                    console.error(err);
-                    setError(err.message);
-                } else {
-                    // the possible response status codes
-                    enum LoginStatus { SUCCESS = 200, INVALID_CREDENTIALS = 401}
-                    console.log(res);
-                    // check if the login was successful
-                    if (res.getStatus() === LoginStatus.SUCCESS) {
-                        // store the jwt token and refresh token in local storage
-                        localStorage.setItem('jwt_token', res.getJwttoken());
-                        localStorage.setItem('refresh_token', res.getRefreshtoken());
-                        // redirect to the contacts page
-                        window.location.href = '/contacts';
-                    }
-                    else if (res.getStatus() === LoginStatus.INVALID_CREDENTIALS) {
-                        setError(res.getError());
-                    }
-                    else {
-                        setError("Unknown error");
-                    }
-                }
+            login(username, password, dispatch).then((res: LoginResponse) => {
+                // if the response is successful, redirect to the contacts page with success message
+                navigate('/contacts', {state: {success: "Login successful"}});
+            }).catch((err: RpcError) => {
+                // otherwise, set the error message
+                console.error(err);
+                setError(err.message);
             });
-        }
-        else{
+        } else {
             setError("Please enter both a username and password");
         }
     }, [username_ref, password_ref]);
