@@ -79,6 +79,7 @@ export default function ContactsListPage(): React.ReactElement {
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
             // if there is an error, redirect to the login page
+            // todo: create a global error handler function
             navigate('/login');
             console.log(err);
         });
