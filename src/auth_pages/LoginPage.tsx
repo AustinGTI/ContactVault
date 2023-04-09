@@ -8,6 +8,7 @@ import {useDispatch} from "react-redux";
 import '../styles/global_styles.scss'
 import '../styles/login_page.scss'
 import Logo from "../assets/Logo";
+import {Header} from "../globals/global_components";
 
 export default function LoginPage() {
     // ? constants and states

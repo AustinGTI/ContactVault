@@ -1,3 +1,5 @@
+@import 'global_styles.scss';
+
 div.login-page {
   display: flex;
   flex-direction: column;
@@ -39,7 +41,7 @@ div.login-page {
 
       > p {
         margin: 0;
-        color: #d33;
+        color: $primary-color;
         font-size: 1rem;
         text-align: center;
         text-decoration: underline;
