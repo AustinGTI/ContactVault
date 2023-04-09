@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package contacts;
+
+service ContactService {
+  rpc AddContact (Contact) returns (ContactID);
+  rpc GetContacts (Empty) returns (ContactList);
+  rpc UpdateContact (Contact) returns (Contact);
+  rpc DeleteContact (ContactID) returns (Empty);
+}
+
+message Empty {}
+
+message Contact {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+}
+
+message ContactID {
+  string id = 1;
+}
+
+message ContactList {
+  repeated Contact contacts = 1;
+  string error = 2;
+  int32 status = 3;
+}

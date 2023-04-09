@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package auth;
+
+service AuthService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc UserMe (UserRequest) returns  (UserResponse);
+  rpc RefreshAccessToken (RefreshAccessTokenRequest) returns  (RefreshAccessTokenResponse);
+}
+
+message UserRequest{}
+
+message UserResponse {
+  int32 status = 1;
+  string error = 2;
+  string username = 4;
+  string id = 5;
+  string password = 6;
+}
+
+message LoginRequest{
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse{
+  int32 status = 1;
+  string error = 2;
+  string jwtToken = 3;
+  string refreshToken = 4;
+}
+
+message RefreshAccessTokenRequest{
+  string refreshToken = 1;
+}
+
+message RefreshAccessTokenResponse{
+  int32 status = 1;
+  string error = 2;
+  string accessToken = 3;
+}
