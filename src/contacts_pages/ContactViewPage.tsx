@@ -36,16 +36,20 @@ export default function ContactViewPage({
         if (name && email && phone) {
             // create a Contact object
             const contact = new Contact();
+            contact.setId('sdfsdf');
             contact.setName(name);
             contact.setEmail(email);
             contact.setPhone(phone);
 
+            console.log('submit handler called');
             // send the values to the server
             submitFunction(`${localStorage.getItem('jwt_token')}`, contact).then((res) => {
                 // if the response is successful, redirect to the contacts page with success message
                 nav('/contacts', {state: {success: "Contact added successfully"}});
+                console.log('function called');
             }).catch((err) => {
                 // otherwise, set the error message
+                console.error(err);
                 setError(err.message);
             });
         }
@@ -53,7 +57,7 @@ export default function ContactViewPage({
         else {
             setError("Please fill in all the fields");
         }
-    }, [nav]);
+    }, [nav,submitFunction]);
 
 
     return (
