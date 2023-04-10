@@ -54,9 +54,9 @@ export function DeleteModal({
         setShow(false);
     }, [deleteFunction, setShow]);
     return (
-        <div className={'delete-modal'}>
-            <div className="modal-content">
-                <h3>Confirm Deletion</h3>
+        <div className={'modal delete-modal'}>
+            <div className="form modal-content">
+                <h2>Confirm Deletion</h2>
                 <p>Are you sure you want to delete this contact?</p>
                 <div className="modal-buttons">
                     <button onClick={() => setShow(false)}>Cancel</button>
