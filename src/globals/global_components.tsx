@@ -2,8 +2,7 @@ import React, {useCallback, useEffect, useState} from "react";
 import {ReactComponent as Logo} from "../assets/leta-logo.svg";
 import {ReactComponent as ProfileIcon} from "../assets/profile-icon.svg";
 import {ReactComponent as DropdownIcon} from "../assets/dropdown-icon.svg";
-import {useSelector} from "react-redux";
-import {logout} from "./client_functions";
+import {useDispatch, useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import '../styles/header.scss';
 import {ReactComponent as CancelIcon} from "../assets/cancel-icon.svg";
@@ -28,11 +27,12 @@ export function Header({title}: { title: string }): React.ReactElement {
     console.log(user);
     const [show_dropdown, setShowDropdown] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     // function to handle the logout button
     const handleLogout = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        exitSite(navigate, 'You have logged out successfully.', MessageType.SUCCESS);
-    }, [navigate]);
+        exitSite(navigate,dispatch, 'You have logged out successfully.', MessageType.SUCCESS);
+    }, [navigate,dispatch]);
     return (
         <div className="header-box">
             <div className="logo-box"><Logo height={100}/></div>

@@ -8,7 +8,6 @@ import {
 import {AuthServiceClient} from "../protos/AuthServiceClientPb";
 import {Contact, ContactID, ContactList, Empty} from "../protos/contacts_pb";
 import {ContactServiceClient} from "../protos/ContactsServiceClientPb";
-import {useDispatch} from "react-redux";
 import {
     addContactRedux,
     clearContactsRedux, contactToReduxContact,
@@ -17,7 +16,6 @@ import {
     updateContactRedux
 } from "../redux/contacts_slice";
 import {clearUserRedux, setUserRedux} from "../redux/user_slice";
-import {Dispatch} from "react";
 
 // region CONSTANTS
 const HOST = "http://localhost:8080";
@@ -25,7 +23,7 @@ const HOST = "http://localhost:8080";
 // region AUTHENTICATION FUNCTIONS
 
 // function to login a user
-export function login(username: string, password: string,dispatch : any): Promise<LoginResponse> {
+export function login(username: string, password: string, dispatch: any): Promise<LoginResponse> {
     return new Promise((resolve, reject) => {
         const request = new LoginRequest();
         request.setUsername(username);
@@ -40,11 +38,11 @@ export function login(username: string, password: string,dispatch : any): Promis
                     reject(new Error(response.getError()));
                 }
                 // if the status code is 200, store the tokens in local storage
-                else{
+                else {
                     localStorage.setItem("jwt_token", response.getJwttoken());
                     localStorage.setItem("refresh_token", response.getRefreshtoken());
                     // on login, call userMe to get user details and store them in the redux store
-                    userMe(response.getJwttoken(),dispatch).then((_) => resolve(response)).catch(reject);
+                    userMe(response.getJwttoken(), dispatch).then((_) => resolve(response)).catch(reject);
                 }
             }
         });
@@ -52,11 +50,14 @@ export function login(username: string, password: string,dispatch : any): Promis
 }
 
 // function to logout a user
-export function logout(): Promise<void> {
+export function logout(dispatch: any): Promise<void> {
     // remove tokens from local storage
     return new Promise((resolve, reject) => {
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("refresh_token");
+        // clear the redux store
+        dispatch(clearUserRedux());
+        dispatch(clearContactsRedux());
         resolve();
     });
 }
@@ -91,11 +92,18 @@ export function userMe(accessToken: string, dispatch: any, attempt_refresh: bool
         const client = new AuthServiceClient(HOST, null, null);
         client.userMe(request, {'authorization': accessToken}, (err, response) => {
             if (err) {
+                err.message = "Session has likely expired, please login again";
                 if (attempt_refresh) {
                     // if there is an error, it means the access token is invalid, try to refresh it
                     refreshAccessToken().then((response) => {
                             // if refresh token is valid, try again with the new access token
-                            userMe(response.getAccesstoken(),dispatch,false).then(resolve).catch(reject);
+                            if (response.getStatus() === 200) {
+                                userMe(response.getAccesstoken(), dispatch, false).then(resolve).catch(reject);
+                            }
+                            // else, the session has likely expired, reject the promise
+                            else {
+                                reject(err);
+                            }
                         }
                     ).catch((_) => {
                         // if refresh token is invalid, reject the promise
@@ -118,16 +126,23 @@ export function userMe(accessToken: string, dispatch: any, attempt_refresh: bool
 // region CONTACTS FUNCTIONS
 
 // function to get all contacts
-export function getContacts(accessToken: string, dispatch: any , attempt_refresh: boolean = true): Promise<ContactList> {
+export function getContacts(accessToken: string, dispatch: any, attempt_refresh: boolean = true): Promise<ContactList> {
     return new Promise((resolve, reject) => {
         const client = new ContactServiceClient(HOST, null, null);
         client.getContacts(new ContactList(), {'authorization': accessToken}, (err, response) => {
             if (err) {
+                err.message = "Session has likely expired, please login again";
                 if (attempt_refresh) {
                     // if there is an error, it means the access token is invalid, try to refresh it
                     refreshAccessToken().then((response) => {
                             // if refresh token is valid, try again with the new access token
-                            getContacts(response.getAccesstoken(),dispatch,false).then(resolve).catch(reject);
+                            if (response.getStatus() === 200) {
+                                getContacts(response.getAccesstoken(), dispatch, false).then(resolve).catch(reject);
+                            }
+                            // else, the session has likely expired, reject the promise
+                            else {
+                                reject(err);
+                            }
                         }
                     ).catch((_) => {
                         // if refresh token is invalid, reject the promise
@@ -152,12 +167,18 @@ export function addContact(accessToken: string, contact: Contact, dispatch: any,
         const client = new ContactServiceClient(HOST, null, null);
         client.addContact(contact, {'authorization': accessToken}, (err, response) => {
             if (err) {
+                err.message = "Session has likely expired, please login again";
                 if (attempt_refresh) {
                     // if there is an error, it means the access token is invalid, try to refresh it
                     refreshAccessToken().then((response) => {
                             // if refresh token is valid, try again with the new access token
-                            // if it is the second attempt, do not try to refresh the token again simply reject the promise
-                            addContact(response.getAccesstoken(), contact, dispatch,false).then(resolve).catch(reject);
+                            if (response.getStatus() === 200) {
+                                addContact(response.getAccesstoken(), contact, dispatch, false).then(resolve).catch(reject);
+                            }
+                            // else, the session has likely expired, reject the promise
+                            else {
+                                reject(err);
+                            }
                         }
                     ).catch((_) => {
                         // if refresh token is invalid, reject the promise
@@ -177,16 +198,23 @@ export function addContact(accessToken: string, contact: Contact, dispatch: any,
 }
 
 // function to update a contact
-export function updateContact(accessToken: string, contact: Contact, dispatch: any,attempt_refresh: boolean = true): Promise<Contact> {
+export function updateContact(accessToken: string, contact: Contact, dispatch: any, attempt_refresh: boolean = true): Promise<Contact> {
     return new Promise((resolve, reject) => {
         const client = new ContactServiceClient(HOST, null, null);
         client.updateContact(contact, {'authorization': accessToken}, (err, response) => {
             if (err) {
+                err.message = "Session has likely expired, please login again";
                 if (attempt_refresh) {
                     // if there is an error, it means the access token is invalid, try to refresh it
                     refreshAccessToken().then((response) => {
                             // if refresh token is valid, try again with the new access token
-                            updateContact(response.getAccesstoken(), contact,dispatch,false).then(resolve).catch(reject);
+                            if (response.getStatus() === 200) {
+                                updateContact(response.getAccesstoken(), contact, dispatch, false).then(resolve).catch(reject);
+                            }
+                            // else, the session has likely expired, reject the promise
+                            else {
+                                reject(err);
+                            }
                         }
                     ).catch((_) => {
                         // if refresh token is invalid, reject the promise
@@ -205,16 +233,23 @@ export function updateContact(accessToken: string, contact: Contact, dispatch: a
 }
 
 // function to delete a contact
-export function deleteContact(accessToken: string, contact_id: ContactID,dispatch : any,attempt_refresh: boolean = true): Promise<Empty> {
+export function deleteContact(accessToken: string, contact_id: ContactID, dispatch: any, attempt_refresh: boolean = true): Promise<Empty> {
     return new Promise((resolve, reject) => {
         const client = new ContactServiceClient(HOST, null, null);
         client.deleteContact(contact_id, {'authorization': accessToken}, (err, response) => {
             if (err) {
+                err.message = "Session has likely expired, please login again";
                 if (attempt_refresh) {
                     // if there is an error, it means the access token is invalid, try to refresh it
                     refreshAccessToken().then((response) => {
                             // if refresh token is valid, try again with the new access token
-                            deleteContact(response.getAccesstoken(), contact_id,dispatch, false).then(resolve).catch(reject);
+                            if (response.getStatus() === 200) {
+                                deleteContact(response.getAccesstoken(), contact_id, dispatch, false).then(resolve).catch(reject);
+                            }
+                            // else, the session has likely expired, reject the promise
+                            else {
+                                reject(err);
+                            }
                         }
                     ).catch((_) => {
                         // if refresh token is invalid, reject the promise

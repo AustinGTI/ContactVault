@@ -40,11 +40,11 @@ function ContactPane({
                 setMessage({message: 'Contact deleted successfully', type: MessageType.SUCCESS});
             }).catch((err) => {
                 // if there is an error, redirect to the login page
-                exitSite(navigate, 'There has been an error. Kindly try again later', MessageType.ERROR);
+                exitSite(navigate,dispatch, err.message, MessageType.ERROR);
             });
         }).catch((err) => {
             // if there is an error, redirect to the login page
-            exitSite(navigate, 'There has been an error. Kindly try again later', MessageType.ERROR);
+            exitSite(navigate,dispatch, err.message, MessageType.ERROR);
         });
     }, [contact, navigate, dispatch, setContacts, setShowModal]);
     return (
@@ -89,7 +89,7 @@ export default function ContactsListPage(): React.ReactElement {
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
             // if there is an error, exit the site and display the error message
-            exitSite(navigate, err.message, MessageType.ERROR);
+            exitSite(navigate,dispatch, err.message, MessageType.ERROR);
         });
         // check for any messages in location state
         if (location.state) {
