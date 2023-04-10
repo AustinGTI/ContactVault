@@ -171,3 +171,19 @@ div.message-box {
     }
   }
 }
+
+button.icon-btn {
+  border: none;
+  background-color: transparent;
+  padding: 0 !important;
+  margin: 0 10px !important;
+  cursor: pointer;
+  rect,polygon, path, circle {
+    fill: $primary-color;
+  }
+  &:hover {
+    rect,polygon, path, circle {
+      fill: #ff9595;
+    }
+  }
+}

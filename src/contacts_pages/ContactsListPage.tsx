@@ -3,9 +3,11 @@ import {Contact, ContactID} from "../protos/contacts_pb";
 import {useLocation, useNavigate} from "react-router-dom";
 import {deleteContact, getContacts} from "../globals/client_functions";
 import {useDispatch} from "react-redux";
-import {DeleteModal, Header, MessageBox, MessageObject, MessageType} from "../globals/global_components";
+import {DeleteModal, Header, IconButton, MessageBox, MessageObject, MessageType} from "../globals/global_components";
 import '../styles/contacts_list_page.scss';
 import {exitSite} from "../globals/global_functions";
+import {ReactComponent as EditIcon} from "../assets/edit-icon.svg";
+import {ReactComponent as DeleteIcon} from "../assets/delete-icon.svg";
 
 
 // a component to display a single contact pane
@@ -40,11 +42,11 @@ function ContactPane({
                 setMessage({message: 'Contact deleted successfully', type: MessageType.SUCCESS});
             }).catch((err) => {
                 // if there is an error, redirect to the login page
-                exitSite(navigate,dispatch, err.message, MessageType.ERROR);
+                exitSite(navigate, dispatch, err.message, MessageType.ERROR);
             });
         }).catch((err) => {
             // if there is an error, redirect to the login page
-            exitSite(navigate,dispatch, err.message, MessageType.ERROR);
+            exitSite(navigate, dispatch, err.message, MessageType.ERROR);
         });
     }, [contact, navigate, dispatch, setContacts, setShowModal]);
     return (
@@ -57,9 +59,11 @@ function ContactPane({
                 <div className="bottom-box">
                     <p>{contact.getEmail()}</p>
                     {/* button to edit the contact */}
-                    <button onClick={handleEdit}>Edit</button>
+                    <button className="edit-btn" onClick={handleEdit}>Edit</button>
+                    {/*<IconButton title='Edit' icon={<EditIcon height={30}/>} onClick={handleEdit}/>*/}
                     {/* button to delete the contact */}
-                    <button onClick={() => setShowModal(true)}>Delete</button>
+                    <button className="delete-btn" onClick={() => setShowModal(true)}>Delete</button>
+                    {/*<IconButton title={'Delete'} icon={<DeleteIcon height={30}/>} onClick={() => setShowModal(true)}/>*/}
                 </div>
             </div>
             {/* modal to confirm deletion */}
@@ -70,7 +74,7 @@ function ContactPane({
 
 
 export default function ContactsListPage(): React.ReactElement {
-    const [contacts, setContacts] = React.useState<Contact[]>([]);
+    const [contacts, setContacts] = React.useState<Contact[] | null>(null);
     const [message, setMessage] = useState<MessageObject | null>(null);
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -89,7 +93,7 @@ export default function ContactsListPage(): React.ReactElement {
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
             // if there is an error, exit the site and display the error message
-            exitSite(navigate,dispatch, err.message, MessageType.ERROR);
+            exitSite(navigate, dispatch, err.message, MessageType.ERROR);
         });
         // check for any messages in location state
         if (location.state) {
@@ -99,6 +103,33 @@ export default function ContactsListPage(): React.ReactElement {
             navigate('/contacts', {});
         }
     }, [navigate, dispatch, location.state]);
+
+    // the jsx to render depending on whether there are contacts or not
+    // if the contacts are null, it means that the contacts are still being retrieved from the server
+    let contacts_box_jsx;
+    if (contacts === null) {
+        contacts_box_jsx =
+            <div className="no-contacts-box">
+                <h1>Loading...</h1>
+            </div>;
+    }
+    // if the contacts are not null and there are no contacts, display a message
+    else if (!contacts.length) {
+        contacts_box_jsx =
+            <div className="no-contacts-box">
+                <h1>No Contacts Yet... :(</h1>
+                <p>Use the 'Add Contact' button above to add some.</p>
+            </div>;
+    }
+    // if there are contacts, display them
+    else {
+        contacts_box_jsx =
+            contacts.map((contact) => {
+                return <ContactPane contact={contact} key={contact.getId()} setContacts={setContacts}
+                                    setMessage={setMessage}/>
+            });
+    }
+
 
     return (
         <>
@@ -111,11 +142,7 @@ export default function ContactsListPage(): React.ReactElement {
                     </button>
                     <MessageBox message_obj={message}/>
                 </div>
-                <div className="contacts-list">
-                    {contacts.length ? contacts.map((contact) => {
-                        return <ContactPane contact={contact} key={contact.getId()} setContacts={setContacts} setMessage={setMessage}/>
-                    }) : <p>No contacts yet</p>}
-                </div>
+                <div className="contacts-list">{contacts_box_jsx}</div>
             </div>
         </>
     );

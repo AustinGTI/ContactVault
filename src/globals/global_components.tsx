@@ -14,6 +14,7 @@ export const enum MessageType {
     ERROR = 'error',
     INFO = 'info'
 }
+
 // a type for a message object
 export type MessageObject = {
     message: string,
@@ -31,8 +32,8 @@ export function Header({title}: { title: string }): React.ReactElement {
 
     // function to handle the logout button
     const handleLogout = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        exitSite(navigate,dispatch, 'You have logged out successfully.', MessageType.SUCCESS);
-    }, [navigate,dispatch]);
+        exitSite(navigate, dispatch, 'You have logged out successfully.', MessageType.SUCCESS);
+    }, [navigate, dispatch]);
     return (
         <div className="header-box">
             <div className="logo-box"><Logo height={100}/></div>
@@ -41,7 +42,8 @@ export function Header({title}: { title: string }): React.ReactElement {
                 <ProfileIcon height={20}/>
                 <div className="user-box">{user.username ?? 'User'}</div>
                 <div className="dropdown-btn" onClick={() => setShowDropdown(!show_dropdown)}>
-                    <DropdownIcon height={7} style={{transform: show_dropdown ? 'rotate(180deg) translateY(2px)' : ''}}/>
+                    <DropdownIcon height={7}
+                                  style={{transform: show_dropdown ? 'rotate(180deg) translateY(2px)' : ''}}/>
                 </div>
                 {show_dropdown &&
                     <div className="dropdown-box">
@@ -105,4 +107,18 @@ export function MessageBox({message_obj}: { message_obj: MessageObject | null })
     );
 
 
+}
+
+
+// a component for a generic icon button
+export function IconButton({
+                               title,
+                               icon,
+                               onClick
+                           }: { title: string, icon: React.ReactElement, onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }): React.ReactElement {
+    return (
+        <button className="icon-btn" onClick={onClick}>
+            {icon}
+        </button>
+    );
 }

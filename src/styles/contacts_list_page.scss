@@ -14,6 +14,13 @@ div.contacts {
   }
   div.contacts-list {
     width: 1000px;
+    div.no-contacts-box{
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
 
 
     div.contact-pane {
