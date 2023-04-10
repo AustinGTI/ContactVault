@@ -1,8 +1,8 @@
-import React, {useCallback, useReducer, useRef} from "react";
+import React, {useCallback, useRef, useState} from "react";
 import {Contact, ContactID} from "../protos/contacts_pb";
 import {useNavigate, useParams} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
-import {Header} from "../globals/global_components";
+import {Header, MessageBox, MessageObject, MessageType} from "../globals/global_components";
 
 import '../styles/contacts_view_page.scss';
 
@@ -18,14 +18,8 @@ export default function ContactViewPage({
     const email_ref = useRef<HTMLInputElement>(null);
     const phone_ref = useRef<HTMLInputElement>(null);
     // todo: create a custom hook to handle the error message
-    // the error message
-    const [error, setError] = useReducer((_: string | null, newError: string | null) => {
-        // if the error is null, return null
-        if (newError === null) return null;
-        // otherwise, return the error and clear it after 5 seconds
-        setTimeout(() => setError(null), 5000);
-        return newError;
-    }, null)
+    // the message
+    const [message, setMessage] = useState<MessageObject | null>(null);
     // check if an id is present in the params, if so then it is an edit page, get the contact from the store
     const id = useParams().id;
     const contact = useSelector((state: any) => id ? state.contacts[id] : null);
@@ -53,17 +47,17 @@ export default function ContactViewPage({
             // send the values to the server
             submitFunction(`${localStorage.getItem('jwt_token')}`, contact, dispatch).then((res) => {
                 // if the response is successful, redirect to the contacts page with success message
-                nav('/contacts', {state: {success: "Contact added successfully"}});
+                nav('/contacts', {state: {message_obj: {message: "Contact saved successfully", type: MessageType.SUCCESS}}});
                 console.log('function called');
             }).catch((err) => {
                 // otherwise, set the error message
                 console.error(err);
-                setError(err.message);
+                setMessage({message: "An error occurred. Kindly try again later", type: MessageType.ERROR});
             });
         }
         // otherwise, set the error message
         else {
-            setError("Please fill in all the fields");
+            setMessage({message: "Please fill all the fields", type: MessageType.ERROR});
         }
     }, [nav, submitFunction, dispatch]);
 
@@ -74,9 +68,7 @@ export default function ContactViewPage({
             <div className="contact-page">
                 <div className="form contact-form">
                     <h1>{page_title}</h1>
-                    <div className="error-box">
-                        {error && <p>{error}</p>}
-                    </div>
+                    <MessageBox message_obj={message}/>
                     <div className="input-box name-input">
                         <label htmlFor="name">Name</label>
                         <input ref={name_ref} type="text" id="name" defaultValue={contact?.name}/>

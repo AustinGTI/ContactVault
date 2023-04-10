@@ -1,30 +1,25 @@
-import React, {useCallback, useReducer, useRef} from "react";
-import {AuthServiceClient} from "../protos/AuthServiceClientPb";
-import {LoginRequest, LoginResponse} from "../protos/auth_pb";
+import React, {useCallback, useEffect, useReducer, useRef, useState} from "react";
+import {LoginResponse} from "../protos/auth_pb";
 import {RpcError} from "grpc-web";
 import {login} from "../globals/client_functions";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {useDispatch} from "react-redux";
 import '../styles/global_styles.scss'
 import '../styles/login_page.scss'
-import Logo from "../assets/Logo";
-import {Header} from "../globals/global_components";
+import {ReactComponent as Logo} from "../assets/leta-logo.svg";
+import {MessageBox, MessageObject, MessageType} from "../globals/global_components";
 
+// the login page
 export default function LoginPage() {
     // ? constants and states
     // the refs for the username and password inputs
     const username_ref = useRef<HTMLInputElement>(null);
     const password_ref = useRef<HTMLInputElement>(null);
-    // the current error message
-    const [error, setError] = useReducer((_: string | null, newError: string | null) => {
-        // if the error is null, return null
-        if (newError === null) return null;
-        // otherwise, return the error and clear it after 5 seconds
-        setTimeout(() => setError(null), 5000);
-        return newError;
-    }, null)
+    // the current message to display
+    const [message, setMessage] = useState<MessageObject | null>(null);
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const location = useLocation();
 
     // ? functions
     // the function to handle the submit button
@@ -39,16 +34,26 @@ export default function LoginPage() {
             // send the username and password to the server using web gRPC
             login(username, password, dispatch).then((res: LoginResponse) => {
                 // if the response is successful, redirect to the contacts page with success message
-                navigate('/contacts', {state: {success: "Login successful"}});
+                navigate('/contacts', {state: {message: "Login successful"}});
             }).catch((err: RpcError) => {
                 // otherwise, set the error message
                 console.error(err);
-                setError(err.message);
+                setMessage({type: MessageType.ERROR, message: err.message});
             });
         } else {
-            setError("Please enter both a username and password");
+            setMessage({type: MessageType.ERROR, message: "Please enter both a username and password"});
         }
     }, [username_ref, password_ref]);
+
+    // ? effects
+    // onmount check if there is a message in the location state and set it to the message state if so
+    useEffect(() => {
+        if (location.state) {
+            setMessage(location.state.message_obj);
+            // clear the location state
+            navigate('/login', {});
+        }
+    }, [location.state]);
 
     // ? render
     return (
@@ -58,9 +63,7 @@ export default function LoginPage() {
             </div>
             <div className="form login-form">
                 <h1>Login To Leta Contacts Site.</h1>
-                <div className='error-box'>
-                   <p>{error}</p>
-                </div>
+                <MessageBox message_obj={message} />
                 <div className={'input-box username-input'}>
                     <label htmlFor="username">Username</label>
                     <input type="text" name="username" id="username" ref={username_ref} required/>

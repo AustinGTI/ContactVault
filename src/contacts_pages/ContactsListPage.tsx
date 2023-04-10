@@ -1,18 +1,19 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {ContactServiceClient} from "../protos/ContactsServiceClientPb";
-import {Contact, ContactID, ContactList, Empty} from "../protos/contacts_pb";
-import {useNavigate} from "react-router-dom";
+import {Contact, ContactID} from "../protos/contacts_pb";
+import {useLocation, useNavigate} from "react-router-dom";
 import {deleteContact, getContacts} from "../globals/client_functions";
 import {useDispatch} from "react-redux";
-import {DeleteModal, Header} from "../globals/global_components";
+import {DeleteModal, Header, MessageBox, MessageObject, MessageType} from "../globals/global_components";
 import '../styles/contacts_list_page.scss';
+import {exitSite} from "../globals/global_functions";
 
 
 // a component to display a single contact pane
 function ContactPane({
                          contact,
-                         setContacts
-                     }: { contact: Contact, setContacts: (contacts: Contact[]) => void }): React.ReactElement {
+                         setContacts,
+                         setMessage
+                     }: { contact: Contact, setContacts: (contacts: Contact[]) => void, setMessage: (message: MessageObject) => void }): React.ReactElement {
     // constants
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -36,15 +37,14 @@ function ContactPane({
                 setContacts(contact_list.getContactsList());
                 // hide the modal
                 setShowModal(false);
+                setMessage({message: 'Contact deleted successfully', type: MessageType.SUCCESS});
             }).catch((err) => {
                 // if there is an error, redirect to the login page
-                navigate('/login');
-                console.log(err);
+                exitSite(navigate, 'There has been an error. Kindly try again later', MessageType.ERROR);
             });
         }).catch((err) => {
             // if there is an error, redirect to the login page
-            navigate('/login');
-            console.log(err);
+            exitSite(navigate, 'There has been an error. Kindly try again later', MessageType.ERROR);
         });
     }, [contact, navigate, dispatch, setContacts, setShowModal]);
     return (
@@ -71,8 +71,10 @@ function ContactPane({
 
 export default function ContactsListPage(): React.ReactElement {
     const [contacts, setContacts] = React.useState<Contact[]>([]);
+    const [message, setMessage] = useState<MessageObject | null>(null);
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const location = useLocation();
 
     // function to handle adding a new contact
     const addContactHandler = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -80,18 +82,23 @@ export default function ContactsListPage(): React.ReactElement {
         navigate('/contacts/add');
     }, [navigate]);
 
-    // retrieve the contacts from the server on mount
+    // retrieve the contacts from the server on mount and check for any messages in location state
     useEffect(() => {
         // presence of the jwt token is checked in the Auth component
         getContacts(`${localStorage.getItem('jwt_token')}`, dispatch).then((contact_list) => {
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
-            // if there is an error, redirect to the login page
-            // todo: create a global error handler function
-            navigate('/login');
-            console.log(err);
+            // if there is an error, exit the site and display the error message
+            exitSite(navigate, err.message, MessageType.ERROR);
         });
-    }, [navigate, dispatch]);
+        // check for any messages in location state
+        if (location.state) {
+            // set the message
+            setMessage(location.state.message_obj);
+            // remove the message from location state
+            navigate('/contacts', {});
+        }
+    }, [navigate, dispatch, location.state]);
 
     return (
         <>
@@ -99,11 +106,14 @@ export default function ContactsListPage(): React.ReactElement {
             <div className="contacts">
                 {/* button to add a new contact */}
                 <div className="btn-box">
-                    <button className="add-contact-btn" onClick={addContactHandler}>Add Contact</button>
+                    <button className="add-contact-btn" onClick={addContactHandler}>
+                        Add Contact
+                    </button>
+                    <MessageBox message_obj={message}/>
                 </div>
                 <div className="contacts-list">
                     {contacts.length ? contacts.map((contact) => {
-                        return <ContactPane contact={contact} key={contact.getId()} setContacts={setContacts}/>
+                        return <ContactPane contact={contact} key={contact.getId()} setContacts={setContacts} setMessage={setMessage}/>
                     }) : <p>No contacts yet</p>}
                 </div>
             </div>
