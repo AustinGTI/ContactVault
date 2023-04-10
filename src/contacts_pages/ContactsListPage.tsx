@@ -3,12 +3,9 @@ import {Contact, ContactID} from "../protos/contacts_pb";
 import {useLocation, useNavigate} from "react-router-dom";
 import {deleteContact, getContacts} from "../globals/client_functions";
 import {useDispatch} from "react-redux";
-import {DeleteModal, Header, IconButton, MessageBox, MessageObject, MessageType} from "../globals/global_components";
+import {DeleteModal, Header, MessageBox, MessageObject, MessageType} from "../globals/global_components";
 import '../styles/contacts_list_page.scss';
 import {exitSite} from "../globals/global_functions";
-import {ReactComponent as EditIcon} from "../assets/edit-icon.svg";
-import {ReactComponent as DeleteIcon} from "../assets/delete-icon.svg";
-
 
 // a component to display a single contact pane
 function ContactPane({
@@ -16,39 +13,44 @@ function ContactPane({
                          setContacts,
                          setMessage
                      }: { contact: Contact, setContacts: (contacts: Contact[]) => void, setMessage: (message: MessageObject) => void }): React.ReactElement {
-    // constants
+    // ? STATES AND CONSTANTS
+    // initialize the hook functions in use in the component
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    // initialize the state to hold the visibility of the delete modal
     const [show_modal, setShowModal] = useState<boolean>(false);
 
-    // function to handle the edit contact button
-    const handleEdit = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    // ? FUNCTIONS
+    // the function to navigate to the edit contact page for this contact on click of the edit button
+    const handleEdit = useCallback((_: React.MouseEvent<HTMLButtonElement>) => {
         // redirect to the edit contact page
         navigate(`/contacts/${contact.getId()}`);
     }, [contact, navigate]);
 
-    // function to handle the deletion of a contact
-    const deleteCurrContact = useCallback(() => {
-        // create a contactId object
+    // function to send the delete request to the server and refresh the contacts list on click of the delete button
+    const deleteThisContact = useCallback(() => {
+        // create a contactId object with the id of the contact to be deleted
         const contact_id = new ContactID();
         contact_id.setId(contact.getId());
+
+        // send the delete request to the server
         deleteContact(`${localStorage.getItem('jwt_token')}`, contact_id, dispatch).then(() => {
-            // refresh the page by reloading the contacts
+            // on success, refresh the page by reloading the contacts, hiding the modal and displaying a success message
             getContacts(`${localStorage.getItem('jwt_token')}`, dispatch).then((contact_list) => {
-                // set the contacts
                 setContacts(contact_list.getContactsList());
-                // hide the modal
                 setShowModal(false);
                 setMessage({message: 'Contact deleted successfully', type: MessageType.SUCCESS});
             }).catch((err) => {
-                // if there is an error, redirect to the login page
+                // if there is an error, exit the site and display the error message
                 exitSite(navigate, dispatch, err.message, MessageType.ERROR);
             });
         }).catch((err) => {
-            // if there is an error, redirect to the login page
+            // if there is an error, exit the site and display the error message
             exitSite(navigate, dispatch, err.message, MessageType.ERROR);
         });
-    }, [contact, navigate, dispatch, setContacts, setShowModal]);
+    }, [contact, navigate, dispatch, setContacts, setShowModal, setMessage]);
+
+    // ? RENDER
     return (
         <>
             <div className="contact-pane">
@@ -61,59 +63,63 @@ function ContactPane({
                     {/* button to edit the contact */}
                     <button className="edit-btn" onClick={handleEdit}>Edit</button>
                     {/*<IconButton title='Edit' icon={<EditIcon height={30}/>} onClick={handleEdit}/>*/}
+
                     {/* button to delete the contact */}
                     <button className="delete-btn" onClick={() => setShowModal(true)}>Delete</button>
                     {/*<IconButton title={'Delete'} icon={<DeleteIcon height={30}/>} onClick={() => setShowModal(true)}/>*/}
                 </div>
             </div>
-            {/* modal to confirm deletion */}
-            {show_modal && <DeleteModal setShow={setShowModal} deleteFunction={deleteCurrContact}/>}
+            {/* modal to confirm deletion, only visible if show modal is true */}
+            {show_modal && <DeleteModal setShow={setShowModal} deleteFunction={deleteThisContact}/>}
         </>
     );
 }
 
 
 export default function ContactsListPage(): React.ReactElement {
+    // ? STATES AND CONSTANTS
+    // initialize the states to hold the contacts and the message
     const [contacts, setContacts] = React.useState<Contact[] | null>(null);
     const [message, setMessage] = useState<MessageObject | null>(null);
+    // initialize the hook functions in use in the component
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const location = useLocation();
 
-    // function to handle adding a new contact
-    const addContactHandler = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-        // redirect to the add contact page
+    // ? FUNCTIONS
+    // function to redirect to the add contact page on click of the add contact button
+    const addContactHandler = useCallback((_: React.MouseEvent<HTMLButtonElement>) => {
         navigate('/contacts/add');
     }, [navigate]);
 
+    //? EFFECTS
     // retrieve the contacts from the server on mount and check for any messages in location state
     useEffect(() => {
-        // presence of the jwt token is checked in the Auth component
         getContacts(`${localStorage.getItem('jwt_token')}`, dispatch).then((contact_list) => {
+            // on success, set the contacts
             setContacts(contact_list.getContactsList());
         }).catch((err) => {
             // if there is an error, exit the site and display the error message
             exitSite(navigate, dispatch, err.message, MessageType.ERROR);
         });
-        // check for any messages in location state
+        // check for any messages in location state, if there are any, set the message and remove the message from location state
         if (location.state) {
-            // set the message
             setMessage(location.state.message_obj);
-            // remove the message from location state
             navigate('/contacts', {});
         }
     }, [navigate, dispatch, location.state]);
 
-    // the jsx to render depending on whether there are contacts or not
-    // if the contacts are null, it means that the contacts are still being retrieved from the server
+    // ? RENDER
+    // define the jsx to render in the contacts list div
     let contacts_box_jsx;
+    // if the contacts are null, it means that the contacts are still being retrieved from the server, so display a loading message
     if (contacts === null) {
         contacts_box_jsx =
             <div className="no-contacts-box">
                 <h1>Loading...</h1>
             </div>;
     }
-    // if the contacts are not null and there are no contacts, display a message
+    // if the contacts are not null and the contact list is empty, display a message indicating that there are no contacts
     else if (!contacts.length) {
         contacts_box_jsx =
             <div className="no-contacts-box">
@@ -121,7 +127,7 @@ export default function ContactsListPage(): React.ReactElement {
                 <p>Use the 'Add Contact' button above to add some.</p>
             </div>;
     }
-    // if there are contacts, display them
+    // if there are contacts, display them as contact panes
     else {
         contacts_box_jsx =
             contacts.map((contact) => {

@@ -1,17 +1,18 @@
-import React, {useState} from 'react';
+import React from 'react';
 import './App.css';
 import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import LoginPage from "./auth_pages/LoginPage";
 import ContactsListPage from "./contacts_pages/ContactsListPage";
 import ContactViewPage from "./contacts_pages/ContactViewPage";
 import {addContact, updateContact} from "./globals/client_functions";
-import {combineReducers, configureStore, getDefaultMiddleware} from "@reduxjs/toolkit";
+import {combineReducers, configureStore} from "@reduxjs/toolkit";
 import {persistStore, persistReducer} from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import {userReducer} from "./redux/user_slice";
 import {contactsReducer} from "./redux/contacts_slice";
-import {Provider} from "react-redux";
+import {Provider, useSelector} from "react-redux";
 import {PersistGate} from "redux-persist/integration/react";
+import StatusCodeErrorPage from "./error_pages/status_code_error_page";
 
 // region REDUX CONFIGURATION
 const persistConfig = {
@@ -35,14 +36,20 @@ const store = configureStore({
 const persistor = persistStore(store);
 // endregion
 
-// component to check if the user is logged in
+// component to check if the user is logged in and redirect to the login page if not
 function Auth({children}: { children: React.ReactElement }): React.ReactElement {
-    // check if both the jwt token and refresh token are present
-    if (localStorage.getItem('jwt_token') && localStorage.getItem('refresh_token')) {
-        return children;
+    // get the user from the redux store
+    const user = useSelector((state: any) => state.user);
+    // if both the jwt token and the refresh token are not in the local storage, redirect to the login page
+    if (!(localStorage.getItem('jwt_token') && localStorage.getItem('refresh_token'))) {
+        return <Navigate to={'/login'}/>;
     }
-    // otherwise, redirect to the login page
-    return <Navigate to={'/login'}/>;
+    // if the user id and the user name are not set in the redux store, redirect to the login page
+    if (!(user.id && user.name)) {
+        return <Navigate to={'/login'}/>;
+    }
+    // otherwise, user is logged in, return the child component
+    return children;
 }
 
 // the main app component
@@ -63,7 +70,7 @@ function App() {
                         <Route path="contacts/:id"
                                element={<ContactViewPage page_title="Edit Contact" submitFunction={updateContact}/>}/>
                         {/* 404 page */}
-                        <Route path="*" element={<div>404</div>}/>
+                        <Route path="*" element={<StatusCodeErrorPage status_code={404}/>}/>
                     </Routes>
                 </BrowserRouter>
             </PersistGate>
