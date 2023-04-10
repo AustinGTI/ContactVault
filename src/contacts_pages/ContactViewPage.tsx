@@ -35,7 +35,7 @@ export default function ContactViewPage({
             return {valid: false, error: 'Name must be at least 3 characters long'};
         }
         // check that this name does not already exist in the store and is not the name of the contact being edited
-        if ((!contact || name !== contact.getName()) && Object.keys(all_contacts).some((key: string) => all_contacts[key].getName() === name)){
+        if ((!contact || name !== contact.name) && Object.keys(all_contacts).some((key: string) => all_contacts[key].name === name)){
             return {valid: false, error: 'A contact with this name already exists'};
         }
         // check that the email follows a conventional email format
@@ -107,19 +107,19 @@ export default function ContactViewPage({
                     <MessageBox message_obj={message}/>
                     <div className="input-box name-input">
                         <label htmlFor="name">Name</label>
-                        <input ref={name_ref} type="text" id="name" defaultValue={contact?.name}/>
+                        <input ref={name_ref} type="text" id="name" defaultValue={contact?.name} max={30}/>
                     </div>
                     <div className="input-box email-input">
                         <label htmlFor="email">Email</label>
-                        <input ref={email_ref} type="text" id="email" defaultValue={contact?.email}/>
+                        <input ref={email_ref} type="text" id="email" defaultValue={contact?.email} max={30}/>
                     </div>
                     <div className="input-box phone-input">
                         <label htmlFor="phone">Phone</label>
-                        <input ref={phone_ref} type="text" id="phone" defaultValue={contact?.phone}/>
+                        <input ref={phone_ref} type="text" id="phone" defaultValue={contact?.phone} max={30}/>
                     </div>
                     <div className="btn-box">
                         <button onClick={() => nav('/contacts')} className="cancel-button">Cancel</button>
-                        <button onClick={submitHandler} className="add-contact-button">{page_title}</button>
+                        <button onClick={submitHandler} className="add-contact-button">Save Contact</button>
                     </div>
                 </div>
             </div>

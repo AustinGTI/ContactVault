@@ -45,7 +45,7 @@ function Auth({children}: { children: React.ReactElement }): React.ReactElement 
         return <Navigate to={'/login'}/>;
     }
     // if the user id and the user name are not set in the redux store, redirect to the login page
-    if (!(user.id && user.name)) {
+    if (!(user.id && user.username)) {
         return <Navigate to={'/login'}/>;
     }
     // otherwise, user is logged in, return the child component
