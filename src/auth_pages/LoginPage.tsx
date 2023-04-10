@@ -56,16 +56,16 @@ export default function LoginPage() {
             <div className='logo'>
                 <Logo height={100}/>
             </div>
-            <div className="login-form">
+            <div className="form login-form">
                 <h1>Login To Leta Contacts Site.</h1>
                 <div className='error-box'>
                    <p>{error}</p>
                 </div>
-                <div className={'username-input'}>
+                <div className={'input-box username-input'}>
                     <label htmlFor="username">Username</label>
                     <input type="text" name="username" id="username" ref={username_ref} required/>
                 </div>
-                <div className={'password-input'}>
+                <div className={'input-box password-input'}>
                     <label htmlFor="password">Password</label>
                     <input type="password" name="password" id="password" ref={password_ref} required/>
                 </div>

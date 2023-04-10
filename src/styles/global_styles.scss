@@ -19,9 +19,9 @@ input {
   padding: 10px;
   margin: 10px;
 
-    &:focus {
-        outline: 1px solid #999;
-    }
+  &:focus {
+    outline: 1px solid #999;
+  }
 }
 
 label {
@@ -43,5 +43,63 @@ button {
   &:hover {
     background-color: $primary-color;
     color: $secondary-color;
+  }
+}
+
+div.form, form {
+  height: 400px;
+  width: 50vw;
+
+  border-radius: 30px;
+  border: 1px solid #ddd;
+
+  background-color: #eee;
+
+  padding: 5px 30px;
+  margin-top: 5px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  > h1 {
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    font-weight: lighter;
+    margin: 5px 20px 0;
+    text-align: center;
+  }
+
+  > div.error-box {
+    height: 20px;
+    width: 100%;
+
+    > p {
+      margin: 0;
+      color: $primary-color;
+      font-size: 1rem;
+      text-align: center;
+      text-decoration: underline;
+      // set underline 2 px below the text
+      text-underline-position: under;
+      text-decoration-thickness: 1px;
+
+    }
+  }
+
+  > div.input-box {
+    width: 50%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+
+    > input {
+      margin-top: 0;
+      align-self: center;
+      width: 90%;
+    }
   }
 }

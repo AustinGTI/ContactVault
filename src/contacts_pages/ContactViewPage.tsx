@@ -1,14 +1,16 @@
 import React, {useCallback, useReducer, useRef} from "react";
-import {addContact} from "../globals/client_functions";
 import {Contact, ContactID} from "../protos/contacts_pb";
 import {useNavigate, useParams} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
+import {Header} from "../globals/global_components";
+
+import '../styles/contacts_view_page.scss';
 
 
 export default function ContactViewPage({
-                                           page_title,
-                                           submitFunction,
-                                       }: { page_title: string, submitFunction: (access_token: string,contact: Contact,dispatch : any) => Promise<Contact | ContactID>, contact?: Contact }): React.ReactElement {
+                                            page_title,
+                                            submitFunction,
+                                        }: { page_title: string, submitFunction: (access_token: string, contact: Contact, dispatch: any) => Promise<Contact | ContactID>, contact?: Contact }): React.ReactElement {
     const nav = useNavigate();
     const dispatch = useDispatch();
     // refs to the input elements
@@ -63,28 +65,36 @@ export default function ContactViewPage({
         else {
             setError("Please fill in all the fields");
         }
-    }, [nav,submitFunction,dispatch]);
+    }, [nav, submitFunction, dispatch]);
 
 
     return (
-        <div className="add-contact">
-            <h1>{page_title}</h1>
-            {error && <p className="error">{error}</p>}
-            <div className="add-contact-form">
-                <div className="name-input">
-                    <label htmlFor="name">Name</label>
-                    <input ref={name_ref} type="text" id="name" defaultValue={contact?.name}/>
+        <>
+            <Header title={''}/>
+            <div className="contact-page">
+                <div className="form contact-form">
+                    <h1>{page_title}</h1>
+                    <div className="error-box">
+                        {error && <p>{error}</p>}
+                    </div>
+                    <div className="input-box name-input">
+                        <label htmlFor="name">Name</label>
+                        <input ref={name_ref} type="text" id="name" defaultValue={contact?.name}/>
+                    </div>
+                    <div className="input-box email-input">
+                        <label htmlFor="email">Email</label>
+                        <input ref={email_ref} type="text" id="email" defaultValue={contact?.email}/>
+                    </div>
+                    <div className="input-box phone-input">
+                        <label htmlFor="phone">Phone</label>
+                        <input ref={phone_ref} type="text" id="phone" defaultValue={contact?.phone}/>
+                    </div>
+                    <div className="btn-box">
+                        <button onClick={() => nav('/contacts')} className="cancel-button">Cancel</button>
+                        <button onClick={submitHandler} className="add-contact-button">{page_title}</button>
+                    </div>
                 </div>
-                <div className="email-input">
-                    <label htmlFor="email">Email</label>
-                    <input ref={email_ref} type="text" id="email" defaultValue={contact?.email}/>
-                </div>
-                <div className="phone-input">
-                    <label htmlFor="phone">Phone</label>
-                    <input ref={phone_ref} type="text" id="phone" defaultValue={contact?.phone}/>
-                </div>
-                <button onClick={submitHandler} className="add-contact-button">{page_title}</button>
             </div>
-        </div>
+        </>
     );
 }
